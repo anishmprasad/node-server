@@ -1,0 +1,159 @@
+{
+  "metaTags": "Aakash CBT",
+  "title": "Aakash CBT Program",
+  "subtitle": "Exclusively for Aakashians, India’s most advanced scoring app for engineering and medical aspirants",
+  "description": "Aakash CBT combines relevant academic content with an artificial intelligence driven performance improvement system to help you score to your potential",
+  "buttonTextOrder": "Order tablet",
+  "buttonLinkOrder": "https://shop.samsung.com/in/byod/aakash",
+  "buttonTextDownload": "Download App",
+  "buttonLinkDownload": "https://play.google.com/store/apps/details?id=com.embibe.institute.aakash.app&hl=en_IN",
+  "watchAppVideosText": "Watch App Videos",
+  "watchAppVideosIcon": "/iCampus/ic_play.svg",
+  "homePageImage": "/iCampus/hand_image.png",
+  "backGroundOvalLayer": "https://assets.embibe.com/staging/assets_new/images/institute/iCampus/oval-layer@3x.png",
+  "promoModal": {
+    "image": "https://assets.embibe.com/staging/assets_new/images/institute/aits/promo_banner/aimt-pop-up.png",
+    "link": "https://www.aimt.embibe.com/"
+  },
+  "theme": {
+    "primaryColor": "#1e91e4",
+    "secondaryColor": "#ffffff",
+    "themeGradient": "linear-gradient(119deg, #44b7ed, #065f9f)",
+    "subHeaderColor": "#000000",
+    "stepsSubtitle": "#4a4a4a",
+    "stepsBackground": "#fbfbfb",
+    "feedbackappButtonColor": "#ebeef0"
+  },
+  "header": {
+    "websiteIcon": "/iCampus/CBT_gradient_logo2x.png",
+    "sideBarCloseIcon": "/iCampus/close-button.svg",
+    "sideBarOpenIcon": "/iCampus/side-bar-icon.svg",
+    "helpSupport": "Help & Support",
+    "helpSupportLink": "http://aakash.embibe.com/help/",
+    "contactUs": "Contact Us",
+    "locateJioStoreText": " Locate Jio Store",
+    "locateJioStoreIcon": "/iCampus/ic_locate.svg",
+    "locateJioStoreLink": "https://www.jio.com/Jio/portal/storeLocator?utm_source=embibe&utm_medium=aakashmicrosite",
+    "headerButtonLoginText": "Login"
+  },
+  "steps": {
+    "title": "Steps for an ideal Aakash CBT experience",
+    "arrowRight": "/iCampus/ic_chevron_right.svg",
+    "downloadHandbook": {
+      "text": "Download Aakash CBT Handbook",
+      "icon": "/iCampus/ic_download.svg",
+      "link": "https://assets.embibe.com/aakash_docs/Aakash+CBT+Handbook.pdf"
+    },
+    "step1": {
+      "image": "/iCampus/img_loginTab.png",
+      "title": "1. Order Tablet",
+      "subtitle": "Use your Aakash PSID, Password and personal email to buy from Samsung Online Shop",
+      "linkText": "Order Tablet",
+      "link": "https://shop.samsung.com/in/byod/aakash"
+    },
+    "step2": {
+      "image": "/iCampus/img_tabCover.png",
+      "title": "2. Buy Tab Cover",
+      "subtitle": "Login through your personal details to order a suitable tablet case on Amazon",
+      "linkText": "Buy Smart cases",
+      "link": "https://www.amazon.in/Qinda-Luxury-Smart-Samsung-Release/dp/B077D7STSW",
+      "linkText2": "Buy Colorful cases",
+      "link2": "https://www.amazon.in/dp/B077BZX3VB?ref=myi_title_dp"
+    },
+    "step3": {
+      "image": "/iCampus/img_jioSim.png",
+      "title": "3. Purchase 4G SIM",
+      "subtitle": "Find nearest Jio Store to purchase SIM",
+      "linkText": "Locate Jio Store",
+      "link": "https://www.jio.com/Jio/portal/storeLocator?utm_source=embibe&utm_medium=aakashmicrosite"
+    },
+    "step4": {
+      "image": "/iCampus/img_feedbackTab.png",
+      "title": "4. Download Aakash CBT App",
+      "subtitle": "Use your Aakash PSID and password to attempt a demo test (Passcode 4321)",
+      "linkText": "Download App",
+      "link": "https://play.google.com/store/apps/details?id=com.embibe.institute.aakash.app&hl=en_IN"
+    }
+  },
+  "bestScores": {
+    "title": "The Aakash CBT advantage",
+    "subtitle": "With access to real exam level mock tests crafted by Aakash Institute faculty and personalised score improvement reports, your best score is just a click away!",
+    "bestScoresImage1": "/iCampus/asset-1@3x.jpg",
+    "bestScoresText1": "ADVANCED ANALYTICS",
+    "bestScoresImage2": "/iCampus/asset-2@3x.jpg",
+    "bestScoresText2": "REAL-TIME, PERSONALISED REPORTS",
+    "bestScoresImage3": "/iCampus/ic_tabletAkaash.svg",
+    "bestScoresText3": "REAL EXAM LEVEL MOCK TESTS"
+  },
+  "carouselProcess": {
+    "items": [
+      {
+        "src": "/iCampus/slide2.png",
+        "id": 1
+      }
+    ],
+    "mobItems": [
+      {
+        "id": 1
+      }
+    ],
+    "slides": {
+      "title": "The Ultimate Self-Study Tool",
+      "leftSideSpecifications": [
+        "Real time reports",
+        "Diagnose subject-level proficiency",
+        "Find concept level weakness",
+        "Question level analysis"
+      ],
+      "middleImage": "/iCampus/slide2.png",
+      "rightSideSpecifications": [
+        "Reduce Careless Errors",
+        "Improve Time Management",
+        "Improve Speed and Accuracy",
+        "Improve Test Taking Strategy"
+      ]
+    },
+    "mobileSlides": {
+      "title": "The Ultimate Self-Study Tool",
+      "image": "/iCampus/mobslide.png",
+      "rightSideSpecifications": [
+        "Find concept level weekness",
+        "Efficient revision plan on improvement areas",
+        "Question level analysis",
+        "Real time reports"
+      ]
+    }
+  },
+  "guideVideo": {
+    "title": "Experience Aakash CBT",
+    "buttonAppText": "APP",
+    "appVideoImage": "/iCampus/app_screenshot.png",
+    "appVideoLink": "https://s3-ap-southeast-1.amazonaws.com/akash-sandboxembibe/AakashHelpVideos/Aakash+App+Walkthrough+v2.mp4",
+    "buttonFeedbackText": "FEEDBACK",
+    "feedbackVideoImage": "/iCampus/feedback_analysis_video.jpg",
+    "feedbackVideoLink": "https://s3-ap-southeast-1.amazonaws.com/akash-sandboxembibe/AakashHelpVideos/Aakash+App+AFA.mp4",
+    "videoPlayIcon": "/iCampus/shape.svg"
+  },
+  "contactInfo": {
+    "title": "Contact Us",
+    "locationIcon": "/iCampus/location.png",
+    "address": "Aakash Institute, Corporate Office Aakash Tower, 8, Pusa Road, New Delhi, Delhi 110005",
+    "phoneIcon": "/iCampus/phone.png",
+    "phoneNumber": "1800-123-0329",
+    "phoneTime": "(only 10 AM - 7 PM)",
+    "mailIcon": "/iCampus/email.png",
+    "mailText": "cbtsupport@aesl.in"
+  },
+  "signin": {
+    "aakashLogo": "/iCampus/CBT_gradient_logo2x.png",
+    "title": "Sign In, Aakashians! ",
+    "idPlaceholder": "Aakash PSID@aesl.in",
+    "passwordPlaceholder": "Password",
+    "idExample": "eg: 00001384xxx@aesl.in",
+    "buttonText": "Log in",
+    "footerLine1": "Can't login?",
+    "footerLine2": "Check your email/SMS for login credentials or contact ",
+    "footerLine3": "1800-123-0329 (only 10 AM-7 PM) or",
+    "footerLine4": "email at cbtsupport@aesl.in"
+  }
+}
