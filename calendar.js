@@ -55,7 +55,6 @@ function sliceRange(range) {
       index = nextIndex;
     }
   }
-  console.log({ segs });
   return segs;
 }
 
@@ -535,18 +534,38 @@ let consoledated = [];
 events.map(event => {
   //   console.log(event);
   let updated = {};
+  let parseEvent = { range: {} };
   if (event.start) {
     updated["start"] = new Date(event.start);
   }
   if (event.end) {
     updated["end"] = new Date(event.end);
   }
-  //   if (event.end == undefined) {
-  //     updated["end"] = new Date(event.start);
-  //   }
-  console.log({ ...event, ...updated });
+  if (event.end == undefined) {
+    // updated["end"] = new Date(event.start);
+    console.log(
+      "parseSingle",
+      parseSingle(
+        event,
+        undefined,
+        undefined,
+        { title: event.title },
+        undefined
+      )
+    );
+    parseEvent = parseSingle(
+      event,
+      undefined,
+      undefined,
+      { title: event.title },
+      undefined
+    );
+  }
+  const { range = {} } = parseEvent || {};
 
-  let ran = { ...event, ...updated };
+  console.log("consoledated event", { ...event, ...updated, ...range });
+
+  let ran = { ...event, ...updated, ...range };
   const k = {
     start: new Date("2017-12-31T00:00:00.000Z"),
     end: new Date("2018-02-11T00:00:00.000Z")
@@ -556,4 +575,463 @@ events.map(event => {
 
 console.log({ consoledated });
 
+// console.log(parseEvents(events, "1"));
+
+function computeActiveRange(dateProfile, isComponentAllDay) {
+  var range = dateProfile.activeRange;
+  if (isComponentAllDay) {
+    return range;
+  }
+  return {
+    start: addMs(range.start, dateProfile.minTime.milliseconds),
+    end: addMs(range.end, dateProfile.maxTime.milliseconds - 864e5) // 864e5 = ms in a day
+  };
+}
+
 // console.log(DaySeries(range, dateGenerator));
+
+function parseEvents(rawEvents, sourceId, calendar, allowOpenRange) {
+  var eventStore = createEmptyEventStore();
+  for (var _i = 0, rawEvents_1 = rawEvents; _i < rawEvents_1.length; _i++) {
+    var rawEvent = rawEvents_1[_i];
+    var tuple = parseEvent(rawEvent, sourceId, calendar, allowOpenRange);
+    if (tuple) {
+      eventTupleToStore(tuple, eventStore);
+    }
+  }
+  console.log("parseEvents", eventStore);
+  return eventStore;
+}
+
+function eventTupleToStore(tuple, eventStore) {
+  if (eventStore === void 0) {
+    eventStore = createEmptyEventStore();
+  }
+  eventStore.defs[tuple.def.defId] = tuple.def;
+  if (tuple.instance) {
+    eventStore.instances[tuple.instance.instanceId] = tuple.instance;
+  }
+  return eventStore;
+}
+
+function computeIsAllDayDefault(sourceId, calendar) {
+  var res = null;
+  if (sourceId) {
+    var source = calendar.state.eventSources[sourceId];
+    res = source.allDayDefault;
+  }
+  if (res == null) {
+    res = calendar.opt("allDayDefault");
+  }
+  return res;
+}
+
+function parseRecurring(
+  eventInput,
+  allDayDefault,
+  dateEnv,
+  recurringTypes,
+  leftovers
+) {
+  for (var i = 0; i < recurringTypes.length; i++) {
+    var localLeftovers = {};
+    var parsed = recurringTypes[i].parse(eventInput, localLeftovers, dateEnv);
+    if (parsed) {
+      var allDay = localLeftovers.allDay;
+      delete localLeftovers.allDay; // remove from leftovers
+      if (allDay == null) {
+        allDay = allDayDefault;
+        if (allDay == null) {
+          allDay = parsed.allDayGuess;
+          if (allDay == null) {
+            allDay = false;
+          }
+        }
+      }
+      __assign(leftovers, localLeftovers);
+      return {
+        allDay: allDay,
+        duration: parsed.duration,
+        typeData: parsed.typeData,
+        typeId: i
+      };
+    }
+  }
+  return null;
+}
+
+function parseEventDef(raw, sourceId, allDay, hasEnd, calendar) {
+  var leftovers = {};
+  var def = pluckNonDateProps(raw, calendar, leftovers);
+  def.defId = String(uid++);
+  def.sourceId = sourceId;
+  def.allDay = allDay;
+  def.hasEnd = hasEnd;
+  for (
+    var _i = 0, _a = calendar.pluginSystem.hooks.eventDefParsers;
+    _i < _a.length;
+    _i++
+  ) {
+    var eventDefParser = _a[_i];
+    var newLeftovers = {};
+    eventDefParser(def, leftovers, newLeftovers);
+    leftovers = newLeftovers;
+  }
+  def.extendedProps = __assign(leftovers, def.extendedProps || {});
+  // help out EventApi from having user modify props
+  Object.freeze(def.ui.classNames);
+  Object.freeze(def.extendedProps);
+  return def;
+}
+
+function createMarkerMeta(input) {
+  if (typeof input === "string") {
+    return this.parse(input);
+  }
+  var marker = null;
+  if (typeof input === "number") {
+    marker = this.timestampToMarker(input);
+  } else if (input instanceof Date) {
+    input = input.valueOf();
+    if (!isNaN(input)) {
+      marker = this.timestampToMarker(input);
+    }
+  } else if (Array.isArray(input)) {
+    marker = arrayToUtcDate(input);
+  }
+  if (marker === null || !isValidDate(marker)) {
+    return null;
+  }
+  return { marker: marker, isTimeUnspecified: false, forcedTzo: null };
+}
+
+function isValidDate(m) {
+  return !isNaN(m.valueOf());
+}
+
+function parse(str) {
+  var ISO_RE = /^\s*(\d{4})(-(\d{2})(-(\d{2})([T ](\d{2}):(\d{2})(:(\d{2})(\.(\d+))?)?(Z|(([-+])(\d{2})(:?(\d{2}))?))?)?)?)?$/;
+
+  var m = ISO_RE.exec(str);
+  if (m) {
+    var marker = new Date(
+      Date.UTC(
+        Number(m[1]),
+        m[3] ? Number(m[3]) - 1 : 0,
+        Number(m[5] || 1),
+        Number(m[7] || 0),
+        Number(m[8] || 0),
+        Number(m[10] || 0),
+        m[12] ? Number("0." + m[12]) * 1000 : 0
+      )
+    );
+    if (isValidDate(marker)) {
+      var timeZoneOffset = null;
+      if (m[13]) {
+        timeZoneOffset =
+          (m[15] === "-" ? -1 : 1) *
+          (Number(m[16] || 0) * 60 + Number(m[18] || 0));
+      }
+      return {
+        marker: marker,
+        isTimeUnspecified: !m[6],
+        timeZoneOffset: timeZoneOffset
+      };
+    }
+  }
+  return null;
+}
+
+function pluckDateProps(raw, leftovers) {
+  var DATE_PROPS = {
+    start: null,
+    date: null,
+    end: null,
+    allDay: null
+  };
+  var props = refineProps(raw, DATE_PROPS, {}, leftovers);
+  props.start = props.start !== null ? props.start : props.date;
+  delete props.date;
+  return props;
+}
+
+function refineProps(rawProps, processors, defaults, leftoverProps) {
+  if (defaults === void 0) {
+    defaults = {};
+  }
+  var refined = {};
+  for (var key in processors) {
+    var processor = processors[key];
+    if (rawProps[key] !== undefined) {
+      // found
+      if (processor === Function) {
+        refined[key] =
+          typeof rawProps[key] === "function" ? rawProps[key] : null;
+      } else if (processor) {
+        // a refining function?
+        refined[key] = processor(rawProps[key]);
+      } else {
+        refined[key] = rawProps[key];
+      }
+    } else if (defaults[key] !== undefined) {
+      // there's an explicit default
+      refined[key] = defaults[key];
+    } else {
+      // must compute a default
+      if (processor === String) {
+        refined[key] = ""; // empty string is default for String
+      } else if (
+        !processor ||
+        processor === Number ||
+        processor === Boolean ||
+        processor === Function
+      ) {
+        refined[key] = null; // assign null for other non-custom processor funcs
+      } else {
+        refined[key] = processor(null); // run the custom processor func
+      }
+    }
+  }
+  if (leftoverProps) {
+    for (var key in rawProps) {
+      if (processors[key] === undefined) {
+        leftoverProps[key] = rawProps[key];
+      }
+    }
+  }
+  return refined;
+}
+
+var INTERNAL_UNITS = ["years", "months", "days", "milliseconds"];
+var PARSE_RE = /^(-?)(?:(\d+)\.)?(\d+):(\d\d)(?::(\d\d)(?:\.(\d\d\d))?)?/;
+// Parsing and Creation
+function createDuration(input, unit) {
+  var _a;
+  if (typeof input === "string") {
+    return parseString(input);
+  } else if (typeof input === "object" && input) {
+    // non-null object
+    return normalizeObject(input);
+  } else if (typeof input === "number") {
+    return normalizeObject(
+      ((_a = {}), (_a[unit || "milliseconds"] = input), _a)
+    );
+  } else {
+    return null;
+  }
+}
+function parseString(s) {
+  var m = PARSE_RE.exec(s);
+  if (m) {
+    var sign = m[1] ? -1 : 1;
+    return {
+      years: 0,
+      months: 0,
+      days: sign * (m[2] ? parseInt(m[2], 10) : 0),
+      milliseconds:
+        sign *
+        ((m[3] ? parseInt(m[3], 10) : 0) * 60 * 60 * 1000 + // hours
+        (m[4] ? parseInt(m[4], 10) : 0) * 60 * 1000 + // minutes
+        (m[5] ? parseInt(m[5], 10) : 0) * 1000 + // seconds
+          (m[6] ? parseInt(m[6], 10) : 0)) // ms
+    };
+  }
+  return null;
+}
+function normalizeObject(obj) {
+  return {
+    years: obj.years || obj.year || 0,
+    months: obj.months || obj.month || 0,
+    days: (obj.days || obj.day || 0) + getWeeksFromInput(obj) * 7,
+    milliseconds:
+      (obj.hours || obj.hour || 0) * 60 * 60 * 1000 + // hours
+      (obj.minutes || obj.minute || 0) * 60 * 1000 + // minutes
+      (obj.seconds || obj.second || 0) * 1000 + // seconds
+      (obj.milliseconds || obj.millisecond || obj.ms || 0) // ms
+  };
+}
+function getWeeksFromInput(obj) {
+  return obj.weeks || obj.week || 0;
+}
+
+function parseSingle(
+  raw,
+  allDayDefault,
+  calendar,
+  leftovers,
+  allowOpenRange,
+  forceEventDuration,
+  defaultAllDayEventDuration = {
+    years: 0,
+    months: 0,
+    days: 1,
+    milliseconds: 0
+  },
+  defaultTimedEventDuration = {
+    years: 0,
+    months: 0,
+    days: 0,
+    milliseconds: 3600000
+  }
+) {
+  var props = pluckDateProps(raw, leftovers);
+  var allDay = props.allDay;
+  var startMeta;
+  var startMarker = null;
+  var hasEnd = false;
+  var endMeta;
+  var endMarker = null;
+  startMeta = createMarkerMeta(props.start);
+  if (startMeta) {
+    startMarker = startMeta.marker;
+  } else if (!allowOpenRange) {
+    return null;
+  }
+  if (props.end != null) {
+    endMeta = createMarkerMeta(props.end);
+  }
+  if (allDay == null) {
+    if (allDayDefault != null) {
+      allDay = allDayDefault;
+    } else {
+      // fall back to the date props LAST
+      allDay =
+        (!startMeta || startMeta.isTimeUnspecified) &&
+        (!endMeta || endMeta.isTimeUnspecified);
+    }
+  }
+  if (allDay && startMarker) {
+    startMarker = startOfDay(startMarker);
+  }
+  if (endMeta) {
+    endMarker = endMeta.marker;
+    if (allDay) {
+      endMarker = startOfDay(endMarker);
+    }
+    if (startMarker && endMarker <= startMarker) {
+      endMarker = null;
+    }
+  }
+  if (endMarker) {
+    hasEnd = true;
+  } else if (!allowOpenRange) {
+    hasEnd = forceEventDuration || false;
+    endMarker = add(
+      startMarker,
+      allDay
+        ? createDuration(defaultAllDayEventDuration)
+        : createDuration(defaultTimedEventDuration)
+    );
+  }
+  return {
+    allDay: allDay,
+    hasEnd: hasEnd,
+    range: { start: startMarker, end: endMarker },
+    forcedStartTzo: startMeta ? startMeta.forcedTzo : null,
+    forcedEndTzo: endMeta ? endMeta.forcedTzo : null
+  };
+}
+
+// this.defaultAllDayEventDuration = createDuration(
+//   options.defaultAllDayEventDuration
+// );
+// this.defaultTimedEventDuration = createDuration(
+//   options.defaultTimedEventDuration
+// );
+
+function add(marker, dur) {
+  var a = markerToArray(marker);
+  a[0] += dur.years;
+  a[1] += dur.months;
+  a[2] += dur.days;
+  a[6] += dur.milliseconds;
+  return arrayToMarker(a);
+}
+
+function arrayToUtcDate(a) {
+  // according to web standards (and Safari), a month index is required.
+  // massage if only given a year.
+  if (a.length === 1) {
+    a = a.concat([0]);
+  }
+  return new Date(Date.UTC.apply(Date, a));
+}
+
+function startOfDay(m) {
+  return arrayToUtcDate([m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate()]);
+}
+
+function parseEvent(raw, sourceId, calendar, allowOpenRange) {
+  var allDayDefault = computeIsAllDayDefault(sourceId, calendar);
+  var leftovers0 = {};
+  var recurringRes = parseRecurring(
+    raw, // raw, but with single-event stuff stripped out
+    allDayDefault,
+    calendar.dateEnv,
+    calendar.pluginSystem.hooks.recurringTypes,
+    leftovers0 // will populate with non-recurring props
+  );
+  if (recurringRes) {
+    var def = parseEventDef(
+      leftovers0,
+      sourceId,
+      recurringRes.allDay,
+      Boolean(recurringRes.duration),
+      calendar
+    );
+    def.recurringDef = {
+      typeId: recurringRes.typeId,
+      typeData: recurringRes.typeData,
+      duration: recurringRes.duration
+    };
+    return { def: def, instance: null };
+  } else {
+    var leftovers1 = {};
+    var singleRes = parseSingle(
+      raw,
+      allDayDefault,
+      calendar,
+      leftovers1,
+      allowOpenRange
+    );
+    if (singleRes) {
+      var def = parseEventDef(
+        leftovers1,
+        sourceId,
+        singleRes.allDay,
+        singleRes.hasEnd,
+        calendar
+      );
+      var instance = createEventInstance(
+        def.defId,
+        singleRes.range,
+        singleRes.forcedStartTzo,
+        singleRes.forcedEndTzo
+      );
+      return { def: def, instance: instance };
+    }
+  }
+  return null;
+}
+
+function createEmptyEventStore() {
+  return { defs: {}, instances: {} };
+}
+
+function getMarkerYear(d) {
+  return d.getUTCFullYear();
+}
+function getMarkerMonth(d) {
+  return d.getUTCMonth();
+}
+function getMarkerDay(d) {
+  return d.getUTCDate();
+}
+function arrayToMarker(arr) {
+  return arrayToUtcDate(arr);
+}
+function markerToArray(marker) {
+  return dateToUtcArray(marker);
+}
+
+class GregorianCalendarSystem {}
