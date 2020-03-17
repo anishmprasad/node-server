@@ -1,3 +1,5 @@
+const nextDayThreshold = { years: 0, months: 0, days: 1, milliseconds: 0 };
+
 function diffDays(m0, m1) {
   return (m1.valueOf() - m0.valueOf()) / (1000 * 60 * 60 * 24);
 }
@@ -15,6 +17,7 @@ function getDateDayIndex(date) {
 }
 
 function DaySeriesSliceRange(range) {
+  //   console.log("rangeX", range);
   var firstIndex = getDateDayIndex(range.start); // inclusive first index
   var lastIndex = getDateDayIndex(addDays(range.end, -1)); // inclusive last index
   var clippedFirstIndex = Math.max(0, firstIndex);
@@ -22,6 +25,7 @@ function DaySeriesSliceRange(range) {
   // deal with in-between indices
   clippedFirstIndex = Math.ceil(clippedFirstIndex); // in-between starts round to next cell
   clippedLastIndex = Math.floor(clippedLastIndex); // in-between ends round to prev cell
+  //   console.log("DaySeriesSliceRange", clippedFirstIndex, clippedLastIndex);
   if (clippedFirstIndex <= clippedLastIndex) {
     return {
       firstIndex: clippedFirstIndex,
@@ -34,9 +38,11 @@ function DaySeriesSliceRange(range) {
   }
 }
 
-function sliceRange(range) {
+function sliceRange(range, event) {
+  //   console.log("sliceRange", range);
   var colCnt = this.colCnt || 7;
   var seriesSeg = DaySeriesSliceRange(range);
+  //   console.log("seriesSeg", seriesSeg);
   var segs = [];
   if (seriesSeg) {
     var firstIndex = seriesSeg.firstIndex,
@@ -50,7 +56,8 @@ function sliceRange(range) {
         firstCol: index % colCnt,
         lastCol: (nextIndex - 1) % colCnt,
         isStart: seriesSeg.isStart && index === firstIndex,
-        isEnd: seriesSeg.isEnd && nextIndex - 1 === lastIndex
+        isEnd: seriesSeg.isEnd && nextIndex - 1 === lastIndex,
+        ...event
       });
       index = nextIndex;
     }
@@ -59,7 +66,6 @@ function sliceRange(range) {
 }
 
 function DaySeries(range, dateProfileGenerator) {
-  console.log(dateProfileGenerator);
   var date = range.start;
   var end = range.end;
   var indices = [];
@@ -79,8 +85,6 @@ function DaySeries(range, dateProfileGenerator) {
   this.dates = dates;
   this.indices = indices;
   this.cnt = dates.length;
-
-  console.log(sliceRange(range));
 }
 
 function addDays(m, n) {
@@ -462,118 +466,66 @@ class DateProfileGenerator {
   // return DateProfileGenerator;
 }
 
-const range = {
-  start: new Date("2018-01-09T00:00:00.000Z"),
-  end: new Date("2018-01-10T00:00:00.000Z")
-};
+function asRoughMs(dur) {
+  return (
+    dur.years * (365 * 864e5) +
+    dur.months * (30 * 864e5) +
+    dur.days * 864e5 +
+    dur.milliseconds
+  );
+}
 
-let events = [
-  {
-    title: "All Day Event",
-    start: "2018-01-01"
-  },
-  {
-    title: "Long Event",
-    start: "2018-01-07",
-    end: "2018-01-10"
-  },
-  {
-    id: 999,
-    title: "Repeating Event",
-    start: "2018-01-09T16:00:00"
-  },
-  {
-    id: 999,
-    title: "Repeating Event",
-    start: "2018-01-16T16:00:00"
-  },
-  {
-    title: "Conference",
-    start: "2018-01-11",
-    end: "2018-01-13"
-  },
-  {
-    title: "Meeting",
-    start: "2018-01-12T10:30:00",
-    end: "2018-01-12T12:30:00"
-  },
-  {
-    title: "Lunch",
-    start: "2018-01-12T12:00:00"
-  },
-  {
-    title: "Meeting",
-    start: "2018-01-12T14:30:00"
-  },
-  {
-    title: "Happy Hour",
-    start: "2018-01-12T17:30:00"
-  },
-  {
-    title: "Dinner",
-    start: "2018-01-12T20:00:00"
-  },
-  {
-    title: "Birthday Party",
-    start: "2018-01-13T07:00:00"
-  },
-  {
-    title: "Click for Google",
-    url: "http://google.com/",
-    start: "2018-01-28"
+// given a timed range, computes an all-day range based on how for the end date bleeds into the next day
+// TODO: give nextDayThreshold a default arg
+function computeVisibleDayRange(timedRange, nextDayThreshold) {
+  if (nextDayThreshold === void 0) {
+    nextDayThreshold = createDuration(0);
   }
-];
-var dateGenerator = new DateProfileGenerator();
-const k = {
-  start: new Date("2017-12-31T00:00:00.000Z"),
-  end: new Date("2018-02-11T00:00:00.000Z")
-};
-DaySeries(k, dateGenerator);
-// console.log(DaySeries(range, dateGenerator));
-let consoledated = [];
-events.map(event => {
-  //   console.log(event);
-  let updated = {};
-  let parseEvent = { range: {} };
-  if (event.start) {
-    updated["start"] = new Date(event.start);
+  var startDay = null;
+  var endDay = null;
+  if (timedRange.end) {
+    endDay = startOfDay(timedRange.end);
+    var endTimeMS = timedRange.end.valueOf() - endDay.valueOf(); // # of milliseconds into `endDay`
+    // If the end time is actually inclusively part of the next day and is equal to or
+    // beyond the next day threshold, adjust the end to be the exclusive end of `endDay`.
+    // Otherwise, leaving it as inclusive will cause it to exclude `endDay`.
+    if (endTimeMS && endTimeMS >= asRoughMs(nextDayThreshold)) {
+      endDay = addDays(endDay, 1);
+    }
   }
-  if (event.end) {
-    updated["end"] = new Date(event.end);
+  if (timedRange.start) {
+    startDay = startOfDay(timedRange.start); // the beginning of the day the range starts
+    // If end is within `startDay` but not past nextDayThreshold, assign the default duration of one day.
+    if (endDay && endDay <= startDay) {
+      endDay = addDays(startDay, 1);
+    }
   }
-  if (event.end == undefined) {
-    // updated["end"] = new Date(event.start);
-    console.log(
-      "parseSingle",
-      parseSingle(
-        event,
-        undefined,
-        undefined,
-        { title: event.title },
-        undefined
-      )
-    );
-    parseEvent = parseSingle(
-      event,
-      undefined,
-      undefined,
-      { title: event.title },
-      undefined
-    );
-  }
-  const { range = {} } = parseEvent || {};
+  return { start: startDay, end: endDay };
+}
 
-  console.log("consoledated event", { ...event, ...updated, ...range });
-
-  let ran = { ...event, ...updated, ...range };
-  const k = {
-    start: new Date("2017-12-31T00:00:00.000Z"),
-    end: new Date("2018-02-11T00:00:00.000Z")
-  };
-  consoledated.push({ ...sliceRange(ran) });
-});
-
-console.log({ consoledated });
+function intersectRanges(range0, range1) {
+  var start = range0.start;
+  var end = range0.end;
+  var newRange = null;
+  if (range1.start !== null) {
+    if (start === null) {
+      start = range1.start;
+    } else {
+      start = new Date(Math.max(start.valueOf(), range1.start.valueOf()));
+    }
+  }
+  if (range1.end != null) {
+    if (end === null) {
+      end = range1.end;
+    } else {
+      end = new Date(Math.min(end.valueOf(), range1.end.valueOf()));
+    }
+  }
+  if (start === null || end === null || start < end) {
+    newRange = { start: start, end: end };
+  }
+  return newRange;
+}
 
 // console.log(parseEvents(events, "1"));
 
@@ -589,100 +541,6 @@ function computeActiveRange(dateProfile, isComponentAllDay) {
 }
 
 // console.log(DaySeries(range, dateGenerator));
-
-function parseEvents(rawEvents, sourceId, calendar, allowOpenRange) {
-  var eventStore = createEmptyEventStore();
-  for (var _i = 0, rawEvents_1 = rawEvents; _i < rawEvents_1.length; _i++) {
-    var rawEvent = rawEvents_1[_i];
-    var tuple = parseEvent(rawEvent, sourceId, calendar, allowOpenRange);
-    if (tuple) {
-      eventTupleToStore(tuple, eventStore);
-    }
-  }
-  console.log("parseEvents", eventStore);
-  return eventStore;
-}
-
-function eventTupleToStore(tuple, eventStore) {
-  if (eventStore === void 0) {
-    eventStore = createEmptyEventStore();
-  }
-  eventStore.defs[tuple.def.defId] = tuple.def;
-  if (tuple.instance) {
-    eventStore.instances[tuple.instance.instanceId] = tuple.instance;
-  }
-  return eventStore;
-}
-
-function computeIsAllDayDefault(sourceId, calendar) {
-  var res = null;
-  if (sourceId) {
-    var source = calendar.state.eventSources[sourceId];
-    res = source.allDayDefault;
-  }
-  if (res == null) {
-    res = calendar.opt("allDayDefault");
-  }
-  return res;
-}
-
-function parseRecurring(
-  eventInput,
-  allDayDefault,
-  dateEnv,
-  recurringTypes,
-  leftovers
-) {
-  for (var i = 0; i < recurringTypes.length; i++) {
-    var localLeftovers = {};
-    var parsed = recurringTypes[i].parse(eventInput, localLeftovers, dateEnv);
-    if (parsed) {
-      var allDay = localLeftovers.allDay;
-      delete localLeftovers.allDay; // remove from leftovers
-      if (allDay == null) {
-        allDay = allDayDefault;
-        if (allDay == null) {
-          allDay = parsed.allDayGuess;
-          if (allDay == null) {
-            allDay = false;
-          }
-        }
-      }
-      __assign(leftovers, localLeftovers);
-      return {
-        allDay: allDay,
-        duration: parsed.duration,
-        typeData: parsed.typeData,
-        typeId: i
-      };
-    }
-  }
-  return null;
-}
-
-function parseEventDef(raw, sourceId, allDay, hasEnd, calendar) {
-  var leftovers = {};
-  var def = pluckNonDateProps(raw, calendar, leftovers);
-  def.defId = String(uid++);
-  def.sourceId = sourceId;
-  def.allDay = allDay;
-  def.hasEnd = hasEnd;
-  for (
-    var _i = 0, _a = calendar.pluginSystem.hooks.eventDefParsers;
-    _i < _a.length;
-    _i++
-  ) {
-    var eventDefParser = _a[_i];
-    var newLeftovers = {};
-    eventDefParser(def, leftovers, newLeftovers);
-    leftovers = newLeftovers;
-  }
-  def.extendedProps = __assign(leftovers, def.extendedProps || {});
-  // help out EventApi from having user modify props
-  Object.freeze(def.ui.classNames);
-  Object.freeze(def.extendedProps);
-  return def;
-}
 
 function createMarkerMeta(input) {
   if (typeof input === "string") {
@@ -961,59 +819,6 @@ function startOfDay(m) {
   return arrayToUtcDate([m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate()]);
 }
 
-function parseEvent(raw, sourceId, calendar, allowOpenRange) {
-  var allDayDefault = computeIsAllDayDefault(sourceId, calendar);
-  var leftovers0 = {};
-  var recurringRes = parseRecurring(
-    raw, // raw, but with single-event stuff stripped out
-    allDayDefault,
-    calendar.dateEnv,
-    calendar.pluginSystem.hooks.recurringTypes,
-    leftovers0 // will populate with non-recurring props
-  );
-  if (recurringRes) {
-    var def = parseEventDef(
-      leftovers0,
-      sourceId,
-      recurringRes.allDay,
-      Boolean(recurringRes.duration),
-      calendar
-    );
-    def.recurringDef = {
-      typeId: recurringRes.typeId,
-      typeData: recurringRes.typeData,
-      duration: recurringRes.duration
-    };
-    return { def: def, instance: null };
-  } else {
-    var leftovers1 = {};
-    var singleRes = parseSingle(
-      raw,
-      allDayDefault,
-      calendar,
-      leftovers1,
-      allowOpenRange
-    );
-    if (singleRes) {
-      var def = parseEventDef(
-        leftovers1,
-        sourceId,
-        singleRes.allDay,
-        singleRes.hasEnd,
-        calendar
-      );
-      var instance = createEventInstance(
-        def.defId,
-        singleRes.range,
-        singleRes.forcedStartTzo,
-        singleRes.forcedEndTzo
-      );
-      return { def: def, instance: instance };
-    }
-  }
-  return null;
-}
-
 function createEmptyEventStore() {
   return { defs: {}, instances: {} };
 }
@@ -1034,4 +839,122 @@ function markerToArray(marker) {
   return dateToUtcArray(marker);
 }
 
-class GregorianCalendarSystem {}
+let sampleEvents = [
+  {
+    title: "All Day Event",
+    start: "2018-01-01"
+  },
+  {
+    title: "Long Event",
+    start: "2018-01-07",
+    end: "2018-01-10"
+  },
+  {
+    id: 999,
+    title: "Repeating Event",
+    start: "2018-01-09T16:00:00"
+  },
+  {
+    id: 999,
+    title: "Repeating Event",
+    start: "2018-01-16T16:00:00"
+  },
+  {
+    title: "Conference",
+    start: "2018-01-11",
+    end: "2018-01-13"
+  },
+  {
+    title: "Meeting",
+    start: "2018-01-12T10:30:00",
+    end: "2018-01-12T12:30:00"
+  },
+  {
+    title: "Lunch",
+    start: "2018-01-12T12:00:00"
+  },
+  {
+    title: "Meeting",
+    start: "2018-01-12T14:30:00"
+  },
+  {
+    title: "Happy Hour",
+    start: "2018-01-12T17:30:00"
+  },
+  {
+    title: "Dinner",
+    start: "2018-01-12T20:00:00"
+  },
+  {
+    title: "Birthday Party",
+    start: "2018-01-13T07:00:00"
+  },
+  {
+    title: "Click for Google",
+    url: "http://google.com/",
+    start: "2018-01-28"
+  }
+];
+
+const sampleFramingRange = {
+  start: new Date("2017-12-31T00:00:00.000Z"),
+  end: new Date("2018-02-11T00:00:00.000Z")
+};
+
+// const range = {
+//   start: new Date("2018-01-09T00:00:00.000Z"),
+//   end: new Date("2018-01-10T00:00:00.000Z")
+// };
+
+export function parseCalendarEvents(
+  events = sampleEvents,
+  framingRange = sampleFramingRange
+) {
+  var dateGenerator = new DateProfileGenerator();
+
+  DaySeries(framingRange, dateGenerator);
+  // console.log(DaySeries(range, dateGenerator));
+  let consolidated = [];
+  events.map(event => {
+    //   console.log(event);
+    let updated = {};
+    let parseEvent = { range: {} };
+
+    //   if (event.end == undefined) {
+    // updated["end"] = new Date(event.start);
+    //   console.log(
+    //     "parseSingle",
+    //     parseSingle(event, undefined, undefined, { title: event.title }, undefined)
+    //       .range
+    //   );
+    parseEvent = parseSingle(
+      event,
+      undefined,
+      undefined,
+      { title: event.title },
+      undefined
+    );
+
+    //   }
+    const { range = {} } = parseEvent || {};
+
+    var normalRange =
+      true && nextDayThreshold // !def.allDay
+        ? computeVisibleDayRange(range, nextDayThreshold)
+        : range;
+
+    var slicedRange = intersectRanges(normalRange, framingRange);
+
+    // console.log("intersectRanges", slicedRange);
+
+    // console.log("consolidated event", { ...event, ...slicedRange });
+
+    let ran = { ...event, ...updated, ...slicedRange };
+
+    //   console.log("sliceRange", sliceRange(ran));
+    consolidated.push(...sliceRange(ran, event));
+  });
+
+  console.log({ consolidated });
+  return consolidated;
+}
