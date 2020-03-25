@@ -10,9 +10,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 const jsondata = require("./aakash.json");
 const aimt = require("./aimt.json");
-// const omr = require("./ckeditor");
 
-// console.log(data);
 
 app.use(
   cors({
@@ -31,7 +29,6 @@ app.listen(port);
 
 console.log("API server started on: " + port);
 
-// jsondata.filter(elem => elem.usergroupid);
 
 function data(req, res) {
   return res
