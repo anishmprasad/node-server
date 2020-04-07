@@ -12,8 +12,6 @@ const jsondata = require("./aakash.json");
 const ntadata = require("./nta.json");
 // const omr = require("./ckeditor");
 
-// console.log(data);
-
 app.use(
   cors({
     credentials: true,
@@ -30,8 +28,6 @@ app.use(function (req, res) {
 app.listen(port);
 
 console.log("API server started on: " + port);
-
-// jsondata.filter(elem => elem.usergroupid);
 
 function data(req, res) {
   return res
