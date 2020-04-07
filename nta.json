@@ -1,0 +1,97 @@
+{
+  "metaTags": "National Testing Agency",
+  "title": "National Testing Agency ",
+  "subtitle": "Exclusively for your students",
+  "description": "The Test Series combines relevant academic content with an artificial intelligence driven personalized adaptive learning platform to help you score to your potential",
+  "buttonTextDownload": "Embibe Test Series",
+  "buttonLinkDownload": "https://marvelapp.com/51jf9jc",
+  "homePageImage": "/iCampus/hand_image.png",
+  "backGroundOvalLayer": "https://assets.embibe.com/staging/assets_new/images/institute/iCampus/oval-layer@3x.png",
+  "theme": {
+    "primaryColor": "#012B55",
+    "secondaryColor": "#ffffff",
+    "themeGradient": "linear-gradient(119deg, #44b7ed, #065f9f)",
+    "subHeaderColor": "#000000",
+    "stepsSubtitle": "#4a4a4a",
+    "stepsBackground": "#fbfbfb",
+    "feedbackappButtonColor": "#ebeef0"
+  },
+  "header": {
+    "websiteIcon": "/nta_logo.png",
+    "sideBarCloseIcon": "/iCampus/close-button.svg",
+    "sideBarOpenIcon": "/iCampus/side-bar-icon.svg",
+    "helpSupport": "Help & Support",
+    "helpSupportLink": "http://aakash.embibe.com/help/",
+    "contactUs": "Contact Us",
+    "headerButtonLoginText": "Login"
+  },
+  "bestScores": {
+    "title": "Only the best for you",
+    "subtitle": "With access to real exam level mock tests crafted by the best faculties and personalised score improvement reports, your best score is just a click away!",
+    "bestScoresImage1": "/iCampus/asset-1@3x.jpg",
+    "bestScoresText1": "ADVANCED ANALYTICS",
+    "bestScoresImage2": "/iCampus/asset-2@3x.jpg",
+    "bestScoresText2": "REAL-TIME, PERSONALISED REPORTS",
+    "bestScoresImage3": "/iCampus/ic_tabletAkaash.svg",
+    "bestScoresText3": "REAL EXAM LEVEL MOCK TESTS"
+  },
+  "carouselProcess": {
+    "items": [
+      {
+        "src": "/iCampus/slide2.png",
+        "id": 1
+      }
+    ],
+    "mobItems": [
+      {
+        "id": 1
+      }
+    ],
+    "slides": {
+      "title": "The Ultimate Self-Study Tool",
+      "leftSideSpecifications": ["Engineering"],
+      "middleImage": "/iCampus/slide2.png",
+      "rightSideSpecifications": [
+        "Reduce Careless Errors",
+        "Improve Time Management",
+        "Improve Speed and Accuracy",
+        "Improve Test Taking Strategy"
+      ]
+    },
+    "mobileSlides": {
+      "title": "The Ultimate Self-Study Tool",
+      "image": "/iCampus/mobslide.png",
+      "rightSideSpecifications": ["Medical"]
+    }
+  },
+  "guideVideo": {
+    "title": "Watch this video to Learn more about student and teacher products",
+    "appVideoImage": "/GOAGovt/video-preview.png",
+    "appVideoLink": "https://assets.embibe.com/staging/assets_new/images/institute/NTA/nta_video.mp4",
+    "videoPlayIcon": "/iCampus/shape.svg"
+  },
+  "contactInfo": {
+    "title": "Contact Us",
+    "locationIcon": "/iCampus/location-fiitjee.svg",
+    "addressHeader": "Indiavidual Learning Pvt Ltd,",
+    "addressLine1": "Bizzhub Aspire, 1st Floor, Plot Number 36, SJR Junction, 100 Feet Road,",
+    "addressLine2": "Sony World Signal, Koramangala, ",
+    "address": "Bengaluru, Karnataka 560095",
+    "phoneIcon": "/iCampus/fiitjee-phone.svg",
+    "phoneNumberHeader": "Support Team:",
+    "phoneNumber": "8088431041",
+    "phoneTime": " (available only 10am - 7pm)"
+  },
+  "signin": {
+    "aakashLogo": "/iCampus/CBT_gradient_logo2x.png",
+    "title": "Sign In, Aakashians! ",
+    "idPlaceholder": "Aakash PSID@aesl.in",
+    "passwordPlaceholder": "Password",
+    "idExample": "eg: 00001384xxx@aesl.in",
+    "buttonText": "Log in",
+    "footerLine1": "Can't login?",
+    "footerLine2": "Check your email/SMS for login credentials or contact ",
+    "footerLine3": "1800-123-0329 (only 10 AM-7 PM) or",
+    "footerLine4": "email at cbtsupport@aesl.in"
+  }
+}
