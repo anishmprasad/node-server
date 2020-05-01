@@ -9,7 +9,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 const jsondata = require("./aakash.json");
-const ntadata = require("./nta.json");
+const paramdata = require("./param-issue.json");
 // const omr = require("./ckeditor");
 
 app.use(
@@ -19,7 +19,7 @@ app.use(
   })
 );
 app.use("/data", data);
-app.use("/nta", nta);
+app.use("/param", param);
 
 app.use(function (req, res) {
   res.status(404).send({ url: req.originalUrl + " not found" });
@@ -39,7 +39,7 @@ function data(req, res) {
     .status(200)
     .send(jsondata);
 }
-function nta(req, res) {
+function param(req, res) {
   return res
     .cookie("cookiename", "cookievalue", {
       maxAge: 900000,
@@ -47,5 +47,5 @@ function nta(req, res) {
       path: "/",
     })
     .status(200)
-    .send(ntadata);
+    .send(paramdata);
 }
